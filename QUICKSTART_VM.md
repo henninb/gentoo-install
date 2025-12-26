@@ -74,17 +74,27 @@ Follow the comprehensive [VM_TEST_PLAN.md](VM_TEST_PLAN.md) for detailed testing
 Or jump straight in with a quick test:
 
 ```bash
-# In the VM
-export DISK="/dev/vda"  # or /dev/sda depending on your config
-export HOSTNAME="gentoo-vm"
-export PRIMARY_USER="testuser"
-export KERNEL_METHOD="bin"
-
-# Run pre-chroot phases
+# In the VM - just run the installer!
+# It will interactively prompt you for disk selection
 sudo ./install.sh 01-partition
+
+# Defaults are:
+# - HOSTNAME="gentoo"
+# - PRIMARY_USER="henninb"
+# - KERNEL_METHOD="bin" (binary kernel)
+
+# Continue with bootstrap
 sudo ./install.sh 02-bootstrap
 
 # ... continue with the installation
+```
+
+**Want different settings?** Override defaults:
+
+```bash
+export HOSTNAME="test-vm"
+export PRIMARY_USER="testuser"
+sudo ./install.sh 01-partition
 ```
 
 ## Common Commands

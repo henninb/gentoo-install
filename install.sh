@@ -117,25 +117,117 @@ reset_state() {
     fi
 }
 
+# Interactive configuration prompt
+prompt_configuration() {
+    echo "=========================================="
+    echo "Gentoo Installer Configuration"
+    echo "=========================================="
+    echo
+
+    # Set defaults
+    : "${KERNEL_METHOD:=bin}"
+    : "${PRIMARY_USER:=henninb}"
+    : "${HOSTNAME:=gentoo}"
+
+    # Detect available disks
+    echo "Detecting available disks..."
+    echo
+    local disks=()
+    while IFS= read -r line; do
+        local disk=$(echo "$line" | awk '{print $1}')
+        local size=$(echo "$line" | awk '{print $4}')
+        local type=$(echo "$line" | awk '{print $6}')
+        if [ "$type" = "disk" ]; then
+            disks+=("$disk")
+            echo "  [$((${#disks[@]}))] /dev/$disk - $size"
+        fi
+    done < <(lsblk -ndo NAME,SIZE,TYPE 2>/dev/null || true)
+
+    echo
+
+    # Prompt for disk if not set
+    if [ -z "${DISK:-}" ]; then
+        if [ ${#disks[@]} -eq 0 ]; then
+            error "No disks detected!"
+            exit 1
+        elif [ ${#disks[@]} -eq 1 ]; then
+            DISK="/dev/${disks[0]}"
+            echo "Only one disk detected: $DISK"
+            read -p "Use $DISK? (yes/no) [yes]: " -r confirm
+            confirm=${confirm:-yes}
+            if [[ ! $confirm =~ ^(yes|y|YES|Y)$ ]]; then
+                error "Installation cancelled"
+                exit 1
+            fi
+        else
+            echo "⚠️  WARNING: The selected disk will be COMPLETELY ERASED!"
+            echo
+            read -p "Select disk number [1]: " -r disk_num
+            disk_num=${disk_num:-1}
+
+            if [ "$disk_num" -lt 1 ] || [ "$disk_num" -gt ${#disks[@]} ]; then
+                error "Invalid disk selection"
+                exit 1
+            fi
+
+            DISK="/dev/${disks[$((disk_num-1))]}"
+            echo
+            echo "Selected: $DISK"
+            read -p "⚠️  Are you SURE you want to erase $DISK? (yes/no): " -r confirm
+            if [[ ! $confirm == "yes" ]]; then
+                error "Installation cancelled"
+                exit 1
+            fi
+        fi
+    fi
+
+    # Show configuration summary
+    echo
+    echo "=========================================="
+    echo "Configuration Summary:"
+    echo "=========================================="
+    echo "  Disk:          $DISK"
+    echo "  Hostname:      $HOSTNAME"
+    echo "  Primary User:  $PRIMARY_USER"
+    echo "  Kernel Method: $KERNEL_METHOD (binary kernel)"
+    echo "=========================================="
+    echo
+
+    # Export for use in phases
+    export DISK
+    export HOSTNAME
+    export PRIMARY_USER
+    export KERNEL_METHOD
+}
+
 # Main execution
 main() {
     log "Gentoo Automated Installer started"
     log "Log file: ${LOG_FILE}"
 
-    # Run pre-flight checks before starting installation
-    # Skip pre-flight for utility commands
+    # Prompt for configuration and run pre-flight checks before starting installation
+    # Skip for utility commands
     case "${1:-}" in
-        --list|--reset|--help|-h)
-            # Skip pre-flight for these commands
+        --list|--reset|--help|-h|--audit)
+            # Skip configuration prompt and pre-flight for these commands
             ;;
         01-partition|"")
-            # Run pre-flight checks only for phases that need them
+            # Prompt for configuration if not already set
             if ! phase_completed "01-partition"; then
-                if ! run_preflight_checks "${DISK:-/dev/sda}"; then
+                prompt_configuration
+
+                # Run pre-flight checks with the configured disk
+                if ! run_preflight_checks "${DISK}"; then
                     error "Pre-flight checks failed"
                     error "Please resolve the issues above before continuing"
                     exit 1
                 fi
+            fi
+            ;;
+        *)
+            # For other specific phases, ensure configuration is set
+            if [ -z "${DISK:-}" ] || [ -z "${HOSTNAME:-}" ] || [ -z "${PRIMARY_USER:-}" ]; then
+                prompt_configuration
             fi
             ;;
     esac
@@ -162,6 +254,17 @@ main() {
             echo "  --reset    Clear completion state and start over"
             echo "  --audit    Run comprehensive installation audit"
             echo "  --help     Show this help message"
+            echo
+            echo "Configuration:"
+            echo "  The installer will interactively prompt for configuration."
+            echo "  Defaults:"
+            echo "    HOSTNAME=\"gentoo\""
+            echo "    PRIMARY_USER=\"henninb\""
+            echo "    KERNEL_METHOD=\"bin\" (binary kernel)"
+            echo "    DISK=<prompted interactively>"
+            echo
+            echo "  Override defaults with environment variables:"
+            echo "    DISK=\"/dev/sda\" HOSTNAME=\"myhost\" ./install.sh"
             echo
             echo "If no arguments provided, runs all incomplete phases in order."
             echo

@@ -33,40 +33,52 @@ git clone https://github.com/henninb/gentoo-install.git
 cd gentoo-install
 ```
 
-### Step 3: Configure Environment
+### Step 3: Interactive Configuration
 
-Set your installation parameters:
+The installer will automatically prompt you for configuration with smart defaults:
+
+**Automatic Defaults:**
+- `HOSTNAME="gentoo"`
+- `PRIMARY_USER="henninb"`
+- `KERNEL_METHOD="bin"` (fast binary kernel)
+- `DISK=<interactive prompt with disk detection>`
+
+**Optional: Override Defaults**
+
+You can override any default by setting environment variables before running:
 
 ```bash
-# Required: Specify target disk (WARNING: Will be wiped!)
-export DISK="/dev/sda"              # Change to your disk (e.g., /dev/nvme0n1)
+# Override hostname
+export HOSTNAME="myserver"
 
-# System configuration
-export HOSTNAME="gentoo"            # Your desired hostname
-export TIMEZONE="America/Chicago"   # Your timezone
-export PRIMARY_USER="henninb"       # Your username
+# Override user
+export PRIMARY_USER="myusername"
 
-# Stage3 configuration
+# Override timezone (default: auto-detected)
+export TIMEZONE="America/New_York"
+
+# Override kernel method (default: bin)
+export KERNEL_METHOD="genkernel"  # if you want to compile
+
+# Pre-set disk to skip interactive prompt
+export DISK="/dev/nvme0n1"
+
+# Advanced: Stage3 configuration
 export STAGE3_PROFILE="desktop-systemd"  # or: systemd, openrc, desktop-openrc
 # export STAGE3_URL="<url>"         # Optional: Manually specify stage3 URL
-
-# Kernel configuration
-export KERNEL_METHOD="bin"          # bin = binary kernel (fast), genkernel = compile
-
-# Bootloader
-export BOOTLOADER_ID="gentoo"       # GRUB EFI entry name
 ```
 
-### Step 4: Review Your Configuration
+**Interactive Disk Selection:**
 
-**IMPORTANT**: Double-check your disk selection!
+When you start the installation, the installer will:
+1. Detect all available disks
+2. Show you a numbered list with sizes
+3. Prompt you to select one
+4. Ask for confirmation before proceeding
 
-```bash
-echo "Target disk: ${DISK}"
-lsblk
-```
+No need to manually export DISK unless you want to skip the prompt!
 
-### Step 5: Run Pre-Installation Phases (Outside Chroot)
+### Step 4: Run Pre-Installation Phases (Outside Chroot)
 
 Run phases 01-02 outside the chroot:
 

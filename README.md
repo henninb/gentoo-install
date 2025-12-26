@@ -64,17 +64,11 @@ This installer stays close to Gentoo's imperative philosophy while adding:
 git clone https://github.com/henninb/gentoo-install.git
 cd gentoo-install
 
-# 3. Configure (CRITICAL: Check DISK variable!)
-export DISK="/dev/sda"              # ⚠️ THIS DISK WILL BE WIPED!
-export HOSTNAME="gentoo"
-export PRIMARY_USER="henninb"
-export KERNEL_METHOD="bin"          # Binary kernel (fast)
-
-# 4. Run pre-chroot phases
-sudo ./install.sh 01-partition
+# 3. Run pre-chroot phases (interactive prompts with smart defaults!)
+sudo ./install.sh 01-partition  # Prompts for disk selection
 sudo ./install.sh 02-bootstrap
 
-# 5. Prepare and enter chroot
+# 4. Prepare and enter chroot
 sudo mount -t proc none /mnt/gentoo/proc
 sudo mount --rbind /dev /mnt/gentoo/dev
 sudo mount --rbind /sys /mnt/gentoo/sys
@@ -84,14 +78,19 @@ sudo chroot /mnt/gentoo /bin/bash
 source /etc/profile
 cd /root/gentoo-install
 
-# 6. Run in-chroot phases
-export HOSTNAME="gentoo"
-export PRIMARY_USER="henninb"
-./install.sh  # Runs all remaining phases
+# 5. Run in-chroot phases
+./install.sh  # Runs all remaining phases with defaults:
+              # HOSTNAME="gentoo", PRIMARY_USER="henninb", KERNEL_METHOD="bin"
 
-# 7. Reboot
+# 6. Reboot
 exit && sudo reboot
 ```
+
+**Defaults:**
+- Hostname: `gentoo`
+- User: `henninb`
+- Kernel: Binary (fast)
+- Disk: Interactive selection with confirmation
 
 ## Usage
 
