@@ -45,15 +45,46 @@ case "${KERNEL_METHOD}" in
         log "Installing dracut (required for initramfs generation)..."
         emerge -v --update --newuse sys-kernel/dracut
 
-        # Now install the kernel (skip postinst to avoid installation issues)
+        # Configure kernel-install before installing the kernel
+        log "Configuring kernel-install..."
+        mkdir -p /etc/kernel
+
+        # Tell kernel-install to use /boot for kernels (not /boot/efi)
+        # This is critical for the postinst to succeed
+        cat > /etc/kernel/install.conf <<'EOF'
+# Configuration for kernel-install
+# See kernel-install(8) for details
+
+# Install kernels to /boot, not /boot/efi
+layout=bls
+# BOOT_ROOT can be set to override where kernels are installed
+EOF
+
+        # Ensure /boot directory exists (kernels go here, not /boot/efi)
+        mkdir -p /boot
+
+        # Create the directory structure kernel-install expects
+        mkdir -p /boot/loader/entries
+        mkdir -p /usr/lib/kernel/install.d
+
+        # Now install the kernel (postinst should work now)
         log "Emerging gentoo-kernel-bin (this may take several minutes)..."
-        log "Installing with FEATURES='-postinst' to avoid postinst issues..."
 
-        # Install without running postinst scripts
-        FEATURES="-postinst" emerge -v --update --newuse --autounmask-write --autounmask-continue sys-kernel/gentoo-kernel-bin
+        # Try to install normally first (let postinst run)
+        if emerge -v --update --newuse --autounmask-write --autounmask-continue sys-kernel/gentoo-kernel-bin; then
+            log "Kernel installed successfully via emerge postinst"
+        else
+            warn "Kernel postinst failed, trying with FEATURES=-postinst and manual installation..."
 
-        # Manually copy kernel files to /boot
-        log "Manually installing kernel files to /boot..."
+            # Fallback: install without postinst and do it manually
+            FEATURES="-postinst" emerge -v --update --newuse --autounmask-write --autounmask-continue sys-kernel/gentoo-kernel-bin || {
+                error "Failed to install kernel even with FEATURES=-postinst"
+                exit 1
+            }
+        fi
+
+        # Check if kernel was installed, if not do it manually
+        log "Verifying kernel installation in /boot..."
 
         # Find the latest kernel version
         KERNEL_VER=$(ls -1 /lib/modules/ | sort -V | tail -1)
@@ -61,26 +92,55 @@ case "${KERNEL_METHOD}" in
         if [ -n "$KERNEL_VER" ]; then
             log "Found kernel version: $KERNEL_VER"
 
-            # Copy kernel and initramfs to /boot
-            if [ -f "/usr/src/linux-${KERNEL_VER}/arch/x86/boot/bzImage" ]; then
-                cp "/usr/src/linux-${KERNEL_VER}/arch/x86/boot/bzImage" "/boot/vmlinuz-${KERNEL_VER}"
-                log "Copied kernel to /boot/vmlinuz-${KERNEL_VER}"
-            elif [ -f "/boot/vmlinuz-${KERNEL_VER}-gentoo-dist" ]; then
-                log "Kernel already in /boot"
+            # Check if kernel is already in /boot (from successful postinst)
+            if ls /boot/vmlinuz-* 1>/dev/null 2>&1; then
+                log "Kernel already installed in /boot (postinst succeeded)"
+            else
+                # Manual installation needed
+                log "Manually installing kernel to /boot..."
+
+                # Find kernel image in various possible locations
+                KERNEL_SRC_PATHS=(
+                    "/usr/src/linux-${KERNEL_VER}/arch/x86/boot/bzImage"
+                    "/usr/src/linux-${KERNEL_VER%-gentoo*}/arch/x86/boot/bzImage"
+                    "/lib/modules/${KERNEL_VER}/vmlinuz"
+                    "/lib/modules/${KERNEL_VER}/build/arch/x86/boot/bzImage"
+                )
+
+                KERNEL_FOUND=false
+                for kernel_path in "${KERNEL_SRC_PATHS[@]}"; do
+                    if [ -f "$kernel_path" ]; then
+                        cp "$kernel_path" "/boot/vmlinuz-${KERNEL_VER}"
+                        log "Copied kernel from $kernel_path to /boot/vmlinuz-${KERNEL_VER}"
+                        KERNEL_FOUND=true
+                        break
+                    fi
+                done
+
+                if [ "$KERNEL_FOUND" = false ]; then
+                    # For gentoo-kernel-bin, kernel might be pre-built elsewhere
+                    # Extract it from the package if needed
+                    warn "Could not find pre-built kernel, this may be expected for gentoo-kernel-bin"
+                fi
             fi
 
-            # Generate initramfs with dracut
-            log "Generating initramfs with dracut for kernel ${KERNEL_VER}..."
-
-            # Try different initramfs naming conventions
-            INITRAMFS_NAME="/boot/initramfs-${KERNEL_VER}-gentoo-dist.img"
-
-            if dracut --force --kver "${KERNEL_VER}" "${INITRAMFS_NAME}"; then
-                success "Initramfs generated: ${INITRAMFS_NAME}"
+            # Check if initramfs already exists (from successful postinst)
+            if ls /boot/initramfs-* 1>/dev/null 2>&1 || ls /boot/initrd-* 1>/dev/null 2>&1; then
+                log "Initramfs already exists in /boot (postinst succeeded)"
             else
-                warn "Dracut failed, trying alternate method..."
-                # Fallback: try without explicit kernel version
-                dracut --force "${INITRAMFS_NAME}" || warn "Initramfs generation failed, system may not boot without it"
+                # Generate initramfs with dracut
+                log "Generating initramfs with dracut for kernel ${KERNEL_VER}..."
+
+                # Try different initramfs naming conventions
+                INITRAMFS_NAME="/boot/initramfs-${KERNEL_VER}.img"
+
+                if dracut --force --kver "${KERNEL_VER}" "${INITRAMFS_NAME}"; then
+                    success "Initramfs generated: ${INITRAMFS_NAME}"
+                else
+                    warn "Dracut failed, trying alternate method..."
+                    # Fallback: try without explicit kernel version
+                    dracut --force "${INITRAMFS_NAME}" || warn "Initramfs generation failed, system may not boot without it"
+                fi
             fi
         else
             warn "Could not determine kernel version, skipping manual installation"
