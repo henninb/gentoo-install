@@ -44,21 +44,19 @@ EOF
 
 # Configure timezone
 log "Setting timezone: ${TIMEZONE}"
-if command_exists timedatectl; then
-    run_logged timedatectl set-timezone "${TIMEZONE}"
-    run_logged timedatectl set-ntp yes
-else
-    # Fallback for non-systemd or pre-boot
+# Always use symlink method (systemd will read this)
+if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
     ln -sf "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
+    log "Timezone symlink created"
+else
+    warn "Timezone file not found: /usr/share/zoneinfo/${TIMEZONE}"
+    warn "Using default timezone"
 fi
 
 # Configure hostname
 log "Setting hostname: ${HOSTNAME}"
-if command_exists hostnamectl; then
-    run_logged hostnamectl set-hostname "${HOSTNAME}"
-else
-    echo "${HOSTNAME}" > /etc/hostname
-fi
+echo "${HOSTNAME}" > /etc/hostname
+log "Hostname written to /etc/hostname"
 
 # Update /etc/hosts
 if ! grep -q "${HOSTNAME}" /etc/hosts; then
