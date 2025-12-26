@@ -229,6 +229,13 @@ main() {
     log "Gentoo Automated Installer started"
     log "Log file: ${LOG_FILE}"
 
+    # Install dependencies if we're NOT in chroot (i.e., in live ISO environment)
+    if ! in_chroot; then
+        if ! auto_install_dependencies; then
+            warn "Failed to auto-install dependencies, will check manually"
+        fi
+    fi
+
     # Prompt for configuration and run pre-flight checks before starting installation
     # Skip for utility commands
     case "${1:-}" in

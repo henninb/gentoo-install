@@ -326,7 +326,6 @@ run_preflight_checks() {
 
     local checks=(
         "check_root"
-        "auto_install_dependencies"
         "check_required_commands"
         "check_boot_mode"
         "check_network"
