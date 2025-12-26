@@ -135,7 +135,6 @@ else
             log "Trying mirror: ${mirror}"
 
             # Get the stage3 path
-            local stage3_path
             stage3_path=$(get_latest_stage3_url "${mirror}" "${STAGE3_PROFILE}" 2>/dev/null)
             if [ $? -ne 0 ] || [ -z "${stage3_path}" ]; then
                 warn "Failed to get stage3 URL from ${mirror}, trying next mirror..."
