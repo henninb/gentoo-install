@@ -31,13 +31,17 @@ case "${KERNEL_METHOD}" in
         if package_installed "sys-kernel/gentoo-kernel-bin"; then
             log "Binary kernel already installed"
         else
-            run_logged emerge --update --newuse sys-kernel/gentoo-kernel-bin
+            log "Emerging gentoo-kernel-bin (this may take several minutes)..."
+            emerge -v sys-kernel/gentoo-kernel-bin || {
+                error "Failed to emerge kernel, trying without --newuse..."
+                emerge -v sys-kernel/gentoo-kernel-bin
+            }
         fi
 
         # Also install linux-firmware
         if ! package_installed "sys-kernel/linux-firmware"; then
             log "Installing linux-firmware"
-            run_logged emerge --update --newuse sys-kernel/linux-firmware
+            emerge -v sys-kernel/linux-firmware
         fi
         ;;
 
