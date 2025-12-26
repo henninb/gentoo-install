@@ -45,10 +45,38 @@ case "${KERNEL_METHOD}" in
         log "Installing dracut (required for initramfs generation)..."
         emerge -v --update --newuse sys-kernel/dracut
 
-        # Now install the kernel
+        # Now install the kernel (skip postinst to avoid installation issues)
         log "Emerging gentoo-kernel-bin (this may take several minutes)..."
-        # Use autounmask to handle USE flag changes automatically
-        emerge -v --update --newuse --autounmask-write --autounmask-continue sys-kernel/gentoo-kernel-bin
+        log "Installing with FEATURES='-postinst' to avoid postinst issues..."
+
+        # Install without running postinst scripts
+        FEATURES="-postinst" emerge -v --update --newuse --autounmask-write --autounmask-continue sys-kernel/gentoo-kernel-bin
+
+        # Manually copy kernel files to /boot
+        log "Manually installing kernel files to /boot..."
+
+        # Find the latest kernel version
+        KERNEL_VER=$(ls -1 /lib/modules/ | sort -V | tail -1)
+
+        if [ -n "$KERNEL_VER" ]; then
+            log "Found kernel version: $KERNEL_VER"
+
+            # Copy kernel and initramfs to /boot
+            if [ -f "/usr/src/linux-${KERNEL_VER}/arch/x86/boot/bzImage" ]; then
+                cp "/usr/src/linux-${KERNEL_VER}/arch/x86/boot/bzImage" "/boot/vmlinuz-${KERNEL_VER}"
+                log "Copied kernel to /boot/vmlinuz-${KERNEL_VER}"
+            elif [ -f "/boot/vmlinuz-${KERNEL_VER}-gentoo-dist" ]; then
+                log "Kernel already in /boot"
+            fi
+
+            # Generate initramfs with dracut if not present
+            if [ ! -f "/boot/initramfs-${KERNEL_VER}.img" ] && [ ! -f "/boot/initramfs-${KERNEL_VER}-gentoo-dist.img" ]; then
+                log "Generating initramfs with dracut..."
+                dracut --kver "${KERNEL_VER}" "/boot/initramfs-${KERNEL_VER}.img" || warn "Dracut failed, but continuing..."
+            fi
+        else
+            warn "Could not determine kernel version, skipping manual installation"
+        fi
         ;;
 
     genkernel)
