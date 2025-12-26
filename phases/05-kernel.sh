@@ -32,10 +32,8 @@ case "${KERNEL_METHOD}" in
             log "Binary kernel already installed"
         else
             log "Emerging gentoo-kernel-bin (this may take several minutes)..."
-            emerge -v sys-kernel/gentoo-kernel-bin || {
-                error "Failed to emerge kernel, trying without --newuse..."
-                emerge -v sys-kernel/gentoo-kernel-bin
-            }
+            # Use autounmask to handle USE flag changes automatically
+            emerge -v --autounmask-write --autounmask-continue sys-kernel/gentoo-kernel-bin
         fi
 
         # Also install linux-firmware
