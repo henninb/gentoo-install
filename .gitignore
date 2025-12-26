@@ -1,0 +1,13 @@
+# State directory - tracks completed phases
+state/
+
+# Backup files
+*.bak
+*~
+
+# Downloaded stage3 tarballs
+*.tar.xz
+*.tar.xz.sha256
+
+# Log files (unless you want to commit them)
+*.log

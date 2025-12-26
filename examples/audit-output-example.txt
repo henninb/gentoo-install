@@ -1,0 +1,208 @@
+==============================================
+Example Audit Output - Successful Installation
+==============================================
+
+$ ./audit.sh
+
+INFO: Gentoo Installation Audit
+INFO: Log file: state/audit-20250115-143022.log
+INFO: Report file: state/audit-report-20250115-143022.txt
+
+INFO: Environment: booted
+
+==========================================
+         Auditing Disk Partitioning
+==========================================
+✓ [PASS] Disk: Boot partition exists: /dev/sda1
+✓ [PASS] Disk: Root partition exists: /dev/sda2
+✓ [PASS] Disk: Boot partition is FAT32
+✓ [PASS] Disk: Root partition is ext4
+✓ [PASS] Disk: Boot partition size adequate: 1024MB
+✓ [PASS] Disk: Root partition size adequate: 50GB
+
+==========================================
+         Auditing Mount Points
+==========================================
+✓ [PASS] Mounts: Root filesystem mounted at /
+✓ [PASS] Mounts: Boot partition mounted at /boot/efi
+✓ [PASS] Mounts: /etc/fstab contains boot entry
+✓ [PASS] Mounts: /etc/fstab has root entry
+
+==========================================
+         Auditing Base System
+==========================================
+✓ [PASS] System: Critical directory exists: /bin
+✓ [PASS] System: Critical directory exists: /etc
+✓ [PASS] System: Critical directory exists: /usr
+✓ [PASS] System: Critical directory exists: /var
+✓ [PASS] System: Critical directory exists: /home
+✓ [PASS] System: Critical directory exists: /root
+✓ [PASS] System: Critical directory exists: /tmp
+✓ [PASS] System: Gentoo release: Gentoo Base System release 2.14
+✓ [PASS] System: /etc/os-release exists
+
+==========================================
+         Auditing Locale and Timezone
+==========================================
+✓ [PASS] Locale: en_US.UTF-8 enabled in locale.gen
+✓ [PASS] Locale: Timezone configured: /usr/share/zoneinfo/America/Chicago
+✓ [PASS] Locale: Hostname configured: gentoo
+✓ [PASS] Locale: /etc/hosts has localhost entry
+
+==========================================
+         Auditing Portage Configuration
+==========================================
+✓ [PASS] Portage: Portage tree synced
+✓ [PASS] Portage: Portage tree contains 23451 ebuilds
+✓ [PASS] Portage: make.conf exists
+✓ [PASS] Portage: USE flags configured
+✓ [PASS] Portage: MAKEOPTS configured: MAKEOPTS="-j5"
+✓ [PASS] Portage: Profile selected: ../../var/db/repos/gentoo/profiles/default/linux/amd64/17.1/desktop/systemd
+
+==========================================
+         Auditing Kernel
+==========================================
+✓ [PASS] Kernel: Kernel installed: /boot/vmlinuz-6.6.21-gentoo-dist
+✓ [PASS] Kernel: Initramfs found
+✓ [PASS] Kernel: Running kernel: 6.6.21-gentoo-dist
+✓ [PASS] Kernel: Running kernel matches installed kernel
+
+==========================================
+         Auditing Bootloader
+==========================================
+✓ [PASS] Bootloader: GRUB directory exists
+✓ [PASS] Bootloader: GRUB configuration exists
+✓ [PASS] Bootloader: GRUB config has kernel entries
+✓ [PASS] Bootloader: GRUB has 2 boot entries
+✓ [PASS] Bootloader: GRUB EFI files installed: gentoo
+
+==========================================
+         Auditing System Packages
+==========================================
+✓ [PASS] Packages: sys-apps/systemd installed
+✓ [PASS] Packages: sys-boot/grub installed
+✓ [PASS] Packages: app-admin/sudo installed
+✓ [PASS] Packages: net-misc/dhcpcd installed
+✓ [PASS] Packages: sys-apps/util-linux installed
+✓ [PASS] Packages: app-shells/bash installed
+✓ [PASS] Packages: Total packages installed: 247
+
+==========================================
+         Auditing Users and Permissions
+==========================================
+✓ [PASS] Users: Root user exists
+✓ [PASS] Users: Root password is set
+✓ [PASS] Users: 1 regular user(s) configured
+✓ [PASS] Users: sudo configured for wheel group
+✓ [PASS] Users: doas configured
+
+==========================================
+         Auditing Services
+==========================================
+✓ [PASS] Services: sshd is enabled
+✓ [PASS] Services: sshd is running
+✓ [PASS] Services: dhcpcd is enabled
+✓ [PASS] Services: dhcpcd is running
+✓ [PASS] Services: cronie is enabled
+✓ [PASS] Services: cronie is running
+
+==========================================
+         Auditing Network
+==========================================
+✓ [PASS] Network: DNS configured in /etc/resolv.conf
+✓ [PASS] Network: Internet connectivity working
+✓ [PASS] Network: DNS resolution working
+
+==========================================
+         Auditing Desktop Environment
+==========================================
+✓ [PASS] Desktop: Hyprland installed
+✓ [PASS] Desktop: waybar installed
+✓ [PASS] Desktop: kitty installed
+✓ [PASS] Desktop: wofi installed
+✓ [PASS] Desktop: Hyprland session file exists
+
+==========================================
+         Audit Report
+==========================================
+
+Date: 2025-01-15 14:30:22
+Environment: booted
+Hostname: gentoo
+
+Summary:
+  ✓ Passed:  47
+  ⚠ Warnings: 0
+  ✗ Failed:  0
+
+======================================
+
+✓ Audit PASSED - Installation appears complete and correct
+
+INFO: Audit report saved to: state/audit-report-20250115-143022.txt
+
+
+==============================================
+Example Audit Output - Installation with Issues
+==============================================
+
+$ ./audit.sh
+
+INFO: Gentoo Installation Audit
+INFO: Log file: state/audit-20250115-150133.log
+INFO: Report file: state/audit-report-20250115-150133.txt
+
+INFO: Environment: booted
+
+==========================================
+         Auditing Disk Partitioning
+==========================================
+✓ [PASS] Disk: Boot partition exists: /dev/sda1
+✓ [PASS] Disk: Root partition exists: /dev/sda2
+✓ [PASS] Disk: Boot partition is FAT32
+✓ [PASS] Disk: Root partition is ext4
+⚠ [WARN] Disk: Boot partition small: 512MB (512MB+ recommended)
+✓ [PASS] Disk: Root partition size adequate: 25GB
+
+==========================================
+         Auditing Kernel
+==========================================
+✓ [PASS] Kernel: Kernel installed: /boot/vmlinuz-6.6.21-gentoo-dist
+⚠ [WARN] Kernel: No initramfs (may be intentional)
+
+==========================================
+         Auditing Services
+==========================================
+✓ [PASS] Services: sshd is enabled
+✓ [PASS] Services: sshd is running
+✗ [FAIL] Services: dhcpcd is not enabled
+⚠ [WARN] Services: cronie is enabled but not running
+
+==========================================
+         Auditing Desktop Environment
+==========================================
+⚠ [WARN] Desktop: Hyprland not installed (desktop phase may not have run)
+
+==========================================
+         Audit Report
+==========================================
+
+Date: 2025-01-15 15:01:33
+Environment: booted
+Hostname: gentoo
+
+Summary:
+  ✓ Passed:  42
+  ⚠ Warnings: 4
+  ✗ Failed:  1
+
+======================================
+
+ERROR: Audit FAILED - Critical issues found, installation incomplete
+
+Review the report for details and fix issues:
+  - FAIL: dhcpcd not enabled (run: systemctl enable dhcpcd)
+  - WARN: cronie not running (run: systemctl start cronie)
+  - WARN: Hyprland not installed (run: ./install.sh 09-desktop)
+
+INFO: Audit report saved to: state/audit-report-20250115-150133.txt

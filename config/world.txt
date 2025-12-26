@@ -1,0 +1,17 @@
+# Gentoo System Packages
+# This file defines the packages that should be installed on the system
+# One package per line, category/package format
+# Lines starting with # are comments
+
+# Essential system tools (already handled in phase 07, but listed for reference)
+# app-admin/sudo
+# app-admin/doas
+# net-misc/dhcpcd
+# sys-process/cronie
+# sys-apps/mlocate
+
+# Add your additional packages below:
+# Example:
+# app-editors/vim
+# app-shells/zsh
+# dev-vcs/git

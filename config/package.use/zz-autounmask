@@ -1,0 +1,153 @@
+# app-containers/snapd apparmor
+# media-sound/pulseaudio bluetooth
+app-admin/conky X apcupsd hddtemp ical bundled-toluapp truetype
+app-admin/keepassxc autotype browser yubikey
+app-arch/bzip2 abi_x86_32
+app-containers/podman rootless fuse
+app-crypt/gcr gtk
+app-crypt/pinentry gnome-keyring
+app-editors/emacs dynamic-loading X gui libxml2 json png svg tiff webp sqlite jpeg
+app-editors/neovim -luajit
+app-editors/vim python
+app-emacs/emacs-common gui
+app-emulation/virt-manager usbredir gtk
+app-emulation/virt-viewer gtk
+app-misc/tmux vim-syntax
+app-text/ghostscript-gpl cups
+app-text/poppler qt5
+app-text/xmlto text
+dev-db/mongodb lto
+dev-db/postgresql uuid
+dev-db/sqlite secure-delete
+dev-java/openjdk gentoo-vm -alsa -cups -webstart
+dev-java/openjdk-bin gentoo-vm -alsa -cups -webstart
+dev-lang/mono minimal
+dev-lang/python sqlite
+dev-libs/boost icu python
+dev-libs/cyrus-sasl kerberos
+dev-libs/libdbusmenu gtk3
+dev-libs/libfmt recorder
+dev-libs/libpcre2 pcre32
+dev-libs/libusb udev
+dev-libs/openssl -bindist
+dev-libs/quazip qt5
+dev-libs/raft lz4
+dev-libs/xmlsec nss
+dev-lua/lpeg -luajit
+dev-lua/mpack -luajit
+dev-python/PyQt5 webchannel
+dev-python/docutils doc
+dev-python/numpy lapack
+dev-python/pillow webp
+dev-python/pyotherside qt5
+dev-qt/qtcore icu
+dev-qt/qtgui egl
+dev-qt/qtmultimedia qml widgets
+dev-qt/qtprintsupport cups
+dev-qt/qtquickcontrols2 widgets
+dev-qt/qtsql mysql
+dev-qt/qtwebengine widgets
+dev-util/astyle java
+dev-util/ostree curl
+dev-util/xdelta lzma
+gnome-base/gnome-control-center networkmanager
+kde-frameworks/kconfig qml
+kde-frameworks/sonnet qml
+kde-misc/kdeconnect X bluetooth
+media-gfx/feh xinerama
+media-libs/freetype brotli harfbuzz
+media-libs/gd fontconfig
+media-libs/harfbuzz icu
+media-libs/libpng apng
+media-libs/libsdl2 haptic -wayland gles2
+media-libs/clutter -wayland egl
+media-libs/libsndfile minimal
+media-libs/libvpx postproc
+media-libs/mesa wayland
+media-libs/mlt qt5 ffmpeg frei0r
+media-libs/opencolorio -opengl
+media-libs/opencv contribdnn contrib qt5
+media-sound/pulseaudio-daemon bluetooth
+media-video/ffmpeg fdk x264 libv4l v4l blueray cdio gmp encode mp3 network openssl samba theora vpx opus libass aac opus vorbis lame
+media-video/mpv libmpv
+media-video/obs-studio speex ssl truetype v4l vlc
+media-video/pipewire X bluetooth dbus extra flatpak systemd sound-server ssl system-service ffmpeg gstreamer pipewire-alsa v4l
+net-analyzer/wireshark gtk qt5 wayland-egl wayland
+net-dns/avahi mdnsresponder-compat
+net-dns/dnsmasq script
+net-fs/samba client -gpg systemd -addc
+net-libs/zeromq drafts
+net-misc/spice-gtk usbredir
+net-wireless/gnuradio network
+net-wireless/gr-osmosdr rtlsdr
+sys-apps/flatpak gtk introspection policykit seccomp
+sys-apps/pcsc-lite systemd
+sys-apps/systemd policykit apparmor
+sys-apps/util-linux static-libs tty-helpers
+sys-auth/pambase elogind
+sys-auth/polkit elogind
+sys-boot/grub mount fonts efiemu sdl truetype
+sys-boot/plymouth -udev
+# move sys-devel/clang llvm-core/clang
+llvm-core/clang xml
+# move sys-devel/llvm llvm-core/llvm
+llvm-core/llvm -doc zstd
+sys-fs/lvm2 thin
+sys-fs/squashfs-tools lzma lzo
+sys-libs/libcap static-libs
+sys-libs/libseccomp static-libs
+sys-libs/ncurses -gpm
+sys-libs/zlib abi_x86_32 minizip
+virtual/libusb udev
+www-client/w3m imlib
+www-servers/nginx debug http-cache http http2 ssl rtmp
+x11-libs/gtk+ wayland
+x11-libs/wxGTK gstreamer
+x11-misc/dzen xpm xinerama
+x11-libs/xapp introspection
+gnome-extra/cinnamon networkmanager
+python/fido2 -python3_10 python3_11
+x11-misc/lightdm qt5 systemd gtk elogind audit
+x11-base/xorg-server xephyr
+x11-misc/polybar alsa curl doc i3w ipc mpd network pulseaudio
+media-sound/mpd pipe pipewire mpg123 network systemd zip ffmpeg flac twolame vorbis lame
+gui-libs/wlroots x11-backend
+app-office/libreoffice-bin python_single_target_python3_11
+media-libs/openpgl cpu_flags_x86_sse4_2
+app-emulation/libvirt libssh2 fuse lxc
+net-libs/gnutls pkcs11 tools
+app-crypt/qca qt5
+media-libs/imgui glut
+# move sys-devel/lld llvm-core/lld
+llvm-core/lld zstd
+net-firewall/iptables nftables
+media-gfx/inkscape X
+gui-wm/hyprland X systemd
+app-emulation/qemu opengl ssh spice usbredir pipewire virgl
+x11-libs/libxkbcommon wayland
+media-libs/cogl gles2
+gui-apps/waybar tray systemd pipewire mpd logind network wifi sndio rfkill
+net-misc/networkmanager systemd tools wifi policykit bluetooth
+gnome-extra/nm-applet appindicator
+dev-util/kdevelop qmake
+media-gfx/imagemagick perl
+dev-lang/perl ithreads
+app-pda/gtkpod cdr gstreamer
+media-sound/clementine ipod
+media-sound/rhythmbox ipod udev dbus keyring
+app-containers/runc seccomp
+app-containers/containerd seccomp
+app-emulation/fuse -alsa -ao -backend-sdl -pulseaudio
+sci-libs/opencascade json
+sci-libs/cgnslib hdf5
+sci-libs/hdf5 cxx
+media-libs/tiff zstd lzma
+dev-python/pyside6 uitools
+dev-python/pyside uitools
+net-libs/nodejs npm
+app-misc/hivex ocaml
+dev-python/pyqt6 webchannel
+sci-physics/bullet double-precision
+sci-libs/fftw threads
+media-libs/opensubdiv tbb
+dev-libs/newt python

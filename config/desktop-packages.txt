@@ -1,0 +1,144 @@
+# Desktop Environment Packages - Hyprland and Supporting Tools
+# This file lists packages for a complete Hyprland desktop setup
+# One package per line, category/package format
+# Lines starting with # are comments
+
+# ===== Repository Management =====
+app-eselect/eselect-repository
+
+# ===== Core Hyprland Ecosystem =====
+gui-wm/hyprland
+gui-apps/waybar
+gui-apps/hyprpaper
+gui-apps/hypridle
+gui-apps/hyprlock
+gui-apps/hyprpicker
+gui-wm/hyprland-contrib
+
+# ===== Wayland Infrastructure =====
+gui-libs/wlroots
+gui-apps/xdg-desktop-portal-hyprland
+dev-qt/qtwaylandscanner
+gui-apps/wlr-randr
+
+# ===== Terminal and Shell =====
+x11-terms/kitty
+app-shells/zsh
+
+# ===== Application Launcher and Menu =====
+gui-apps/wofi
+
+# ===== Notifications =====
+gui-apps/swaync
+gui-apps/mako
+x11-misc/dunst
+
+# ===== Screenshots and Screen Capture =====
+gui-apps/grim
+gui-apps/swappy
+gui-apps/hyprshot
+media-gfx/flameshot
+
+# ===== Clipboard Management =====
+gui-apps/wl-clipboard
+gui-apps/cliphist
+x11-misc/clipman
+x11-misc/clipmenu
+x11-misc/copyq
+
+# ===== Lock Screen and Session =====
+gui-apps/swaylock
+gui-apps/wlogout
+x11-misc/i3lock
+
+# ===== File Manager =====
+xfce-base/thunar
+app-misc/spacefm
+
+# ===== Image Viewers =====
+gui-apps/swayimg
+media-gfx/sxiv
+media-gfx/feh
+media-gfx/viewer
+
+# ===== Archive Manager =====
+app-arch/file-roller
+
+# ===== Display and Color Management =====
+x11-apps/mesa-progs
+dev-util/vulkan-tools
+x11-misc/gammastep
+x11-misc/redshift
+sys-power/brightnessctl
+
+# ===== System Utilities =====
+sys-apps/dbus
+app-admin/doas
+app-portage/gentoolkit
+sys-apps/dmidecode
+sys-apps/lsof
+sys-apps/hddtemp
+app-misc/neofetch
+app-editors/neovim
+dev-vcs/git
+
+# ===== System Monitoring and Info =====
+sys-apps/hardinfo
+x11-misc/numlockx
+
+# ===== Audio =====
+media-sound/pavucontrol
+media-sound/playerctl
+media-sound/mpc
+media-sound/mpd
+media-sound/volumeicon
+
+# ===== Networking =====
+net-misc/networkmanager
+net-vpn/mullvadvpn-app
+net-misc/speedtest-cli
+
+# ===== Bluetooth =====
+net-wireless/blueman
+
+# ===== Appearance and Theming =====
+lxde-base/lxappearance
+media-fonts/nerd-fonts
+media-fonts/awesome-terminal-fonts
+media-fonts/noto-fonts-emoji
+
+# ===== Development =====
+dev-lang/rust-bin
+app-misc/jq
+
+# ===== Virtualization =====
+app-emulation/libvirt
+sys-fs/fuse:0
+
+# ===== Security and Encryption =====
+gnome-base/gnome-keyring
+app-crypt/yubikey-manager
+net-misc/certbot
+net-misc/certbot-dns-cloudflare
+
+# ===== Calculators and Tools =====
+sci-calculators/qalculate-gtk
+
+# ===== Web Browser =====
+www-client/w3m
+
+# ===== Window Manager Utilities =====
+x11-misc/wmname
+x11-apps/xdotool
+x11-apps/setxkbmap
+
+# ===== System Panel/Tray =====
+x11-misc/trayer-srg
+
+# ===== Applications =====
+# Note: obsidian and ghostty may need specific overlays or keywords
+# app-editors/obsidian
+# x11-terms/ghostty
+
+# ===== Boot and System =====
+sys-kernel/dracut
