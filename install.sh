@@ -269,13 +269,51 @@ main() {
             # Run audit standalone
             exec "${SCRIPT_DIR}/audit.sh" "${DISK:-/dev/sda}"
             ;;
+        --chroot)
+            # Automatically enter chroot and continue installation
+            if in_chroot; then
+                error "Already in chroot environment"
+                exit 1
+            fi
+
+            MOUNT_ROOT="/mnt/gentoo"
+
+            log "Preparing chroot environment..."
+
+            # Mount filesystems
+            log "Mounting proc, dev, sys..."
+            mount -t proc none "${MOUNT_ROOT}/proc" 2>/dev/null || log "proc already mounted"
+            mount --rbind /dev "${MOUNT_ROOT}/dev" 2>/dev/null || log "dev already mounted"
+            mount --rbind /sys "${MOUNT_ROOT}/sys" 2>/dev/null || log "sys already mounted"
+
+            # Copy resolv.conf for network
+            log "Copying network configuration..."
+            cp -L /etc/resolv.conf "${MOUNT_ROOT}/etc/" 2>/dev/null
+
+            # Copy installer into chroot
+            log "Copying installer to chroot..."
+            rm -rf "${MOUNT_ROOT}/root/gentoo-install"
+            cp -r "${SCRIPT_DIR}" "${MOUNT_ROOT}/root/gentoo-install"
+
+            # Enter chroot and continue installation
+            log "Entering chroot and continuing installation..."
+            log "=========================================="
+
+            exec chroot "${MOUNT_ROOT}" /bin/bash -c "
+                source /etc/profile
+                export PS1='(chroot) \u@\h \w \$ '
+                cd /root/gentoo-install
+                ./install.sh
+            "
+            ;;
         --help|-h)
-            echo "Usage: $0 [phase|--list|--reset|--help]"
+            echo "Usage: $0 [phase|--list|--reset|--chroot|--help]"
             echo
             echo "Options:"
             echo "  phase      Run a specific phase (e.g., 01-partition)"
             echo "  --list     Show all phases and completion status"
             echo "  --reset    Clear completion state and start over"
+            echo "  --chroot   Automatically enter chroot and continue installation"
             echo "  --audit    Run comprehensive installation audit"
             echo "  --help     Show this help message"
             echo

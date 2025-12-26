@@ -68,21 +68,10 @@ cd gentoo-install
 sudo ./install.sh 01-partition  # Prompts for disk selection
 sudo ./install.sh 02-bootstrap
 
-# 4. Prepare and enter chroot
-sudo mount -t proc none /mnt/gentoo/proc
-sudo mount --rbind /dev /mnt/gentoo/dev
-sudo mount --rbind /sys /mnt/gentoo/sys
-sudo cp -L /etc/resolv.conf /mnt/gentoo/etc/
-sudo cp -r $(pwd) /mnt/gentoo/root/gentoo-install
-sudo chroot /mnt/gentoo /bin/bash
-source /etc/profile
-cd /root/gentoo-install
+# 4. Automatically enter chroot and complete installation
+sudo ./install.sh --chroot  # Does everything: mounts, chroot, continues install
 
-# 5. Run in-chroot phases
-./install.sh  # Runs all remaining phases with defaults:
-              # HOSTNAME="gentoo", PRIMARY_USER="henninb", KERNEL_METHOD="bin"
-
-# 6. Reboot
+# 5. Reboot (after exiting chroot)
 exit && sudo reboot
 ```
 
