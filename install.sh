@@ -133,15 +133,39 @@ prompt_configuration() {
     echo "Detecting available disks..."
     echo
     local disks=()
-    while IFS= read -r line; do
-        local disk=$(echo "$line" | awk '{print $1}')
-        local size=$(echo "$line" | awk '{print $4}')
-        local type=$(echo "$line" | awk '{print $6}')
-        if [ "$type" = "disk" ]; then
-            disks+=("$disk")
-            echo "  [$((${#disks[@]}))] /dev/$disk - $size"
-        fi
-    done < <(lsblk -ndo NAME,SIZE,TYPE 2>/dev/null || true)
+
+    # Try lsblk first
+    if command -v lsblk &> /dev/null; then
+        while IFS= read -r line; do
+            # Parse the line - lsblk outputs: NAME SIZE TYPE
+            local disk=$(echo "$line" | awk '{print $1}')
+            local size=$(echo "$line" | awk '{print $2}')
+            local type=$(echo "$line" | awk '{print $3}')
+
+            if [ "$type" = "disk" ]; then
+                disks+=("$disk")
+                echo "  [$((${#disks[@]}))] /dev/$disk - $size"
+            fi
+        done < <(lsblk -ndo NAME,SIZE,TYPE 2>/dev/null)
+    fi
+
+    # Fallback: check for common disk devices directly
+    if [ ${#disks[@]} -eq 0 ]; then
+        echo "  Using fallback detection..."
+        for dev in /dev/vd[a-z] /dev/sd[a-z] /dev/nvme[0-9]n[0-9]; do
+            if [ -b "$dev" ]; then
+                local disk=$(basename "$dev")
+                local size=""
+                if [ -f "/sys/block/$disk/size" ]; then
+                    local sectors=$(cat "/sys/block/$disk/size")
+                    local gb=$((sectors / 2 / 1024 / 1024))
+                    size="${gb}G"
+                fi
+                disks+=("$disk")
+                echo "  [$((${#disks[@]}))] /dev/$disk${size:+ - $size}"
+            fi
+        done
+    fi
 
     echo
 
