@@ -134,19 +134,26 @@ else
         for mirror in "${US_MIRRORS[@]}"; do
             log "Trying mirror: ${mirror}"
 
-            DOWNLOAD_URL=$(get_latest_stage3_url "${mirror}" "${STAGE3_PROFILE}" 2>/dev/null)
-            if [ $? -ne 0 ] || [ -z "${DOWNLOAD_URL}" ]; then
+            # Get the stage3 path
+            local stage3_path
+            stage3_path=$(get_latest_stage3_url "${mirror}" "${STAGE3_PROFILE}" 2>/dev/null)
+            if [ $? -ne 0 ] || [ -z "${stage3_path}" ]; then
                 warn "Failed to get stage3 URL from ${mirror}, trying next mirror..."
                 continue
             fi
 
-            # Clean the URL (remove any whitespace or newlines)
-            DOWNLOAD_URL=$(echo "${DOWNLOAD_URL}" | tr -d '[:space:]')
+            # Build clean URL - use printf to ensure proper formatting
+            DOWNLOAD_URL=$(printf "%s" "${stage3_path}" | tr -d '[:space:][:cntrl:]')
             STAGE3_FILE=$(basename "${DOWNLOAD_URL}")
 
             log "Downloading: ${STAGE3_FILE}"
             log "From: ${DOWNLOAD_URL}"
+            log "URL length: ${#DOWNLOAD_URL} characters"
             log "This may take several minutes depending on your connection..."
+
+            # Debug: print URL in hex to see any hidden characters
+            echo "DEBUG URL hex:" >&2
+            echo "${DOWNLOAD_URL}" | od -A x -t x1z -v | head -5 >&2
 
             # Try wget first (more reliable), fallback to curl
             if command -v wget &>/dev/null; then
