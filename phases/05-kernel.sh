@@ -131,16 +131,72 @@ case "${KERNEL_METHOD}" in
         ;;
 esac
 
-# Validate kernel (but don't fail if it's not perfect)
-if validate_kernel 2>/dev/null; then
-    success "Kernel installation completed and validated"
-else
-    warn "Kernel validation had issues, but kernel files appear to be present"
-    # Check if kernel files exist at all
-    if ls /boot/vmlinuz-* 1>/dev/null 2>&1; then
-        success "Kernel files found in /boot, continuing..."
+# Comprehensive kernel validation
+log "Validating kernel installation..."
+
+KERNEL_VALID=true
+
+# Check 1: Kernel image exists in /boot
+if ls /boot/vmlinuz-* 1>/dev/null 2>&1; then
+    KERNEL_FILE=$(ls -t /boot/vmlinuz-* | head -1)
+    KERNEL_SIZE=$(stat -c%s "$KERNEL_FILE" 2>/dev/null || echo "0")
+
+    if [ "$KERNEL_SIZE" -gt 1000000 ]; then  # Should be > 1MB
+        success "✓ Kernel image found: $KERNEL_FILE ($(numfmt --to=iec $KERNEL_SIZE))"
     else
-        error "No kernel files found in /boot"
-        exit 1
+        error "✗ Kernel image is too small or missing: $KERNEL_FILE"
+        KERNEL_VALID=false
     fi
+else
+    error "✗ No kernel image found in /boot"
+    KERNEL_VALID=false
+fi
+
+# Check 2: Initramfs exists
+if ls /boot/initramfs-* 1>/dev/null 2>&1 || ls /boot/initrd-* 1>/dev/null 2>&1; then
+    INITRD_FILE=$(ls -t /boot/initramfs-* /boot/initrd-* 2>/dev/null | head -1)
+    INITRD_SIZE=$(stat -c%s "$INITRD_FILE" 2>/dev/null || echo "0")
+
+    if [ "$INITRD_SIZE" -gt 1000000 ]; then  # Should be > 1MB
+        success "✓ Initramfs found: $INITRD_FILE ($(numfmt --to=iec $INITRD_SIZE))"
+    else
+        warn "⚠ Initramfs exists but seems small: $INITRD_FILE"
+    fi
+else
+    warn "⚠ No initramfs found (may cause boot issues)"
+fi
+
+# Check 3: Kernel modules exist
+if [ -d /lib/modules ] && [ "$(ls -A /lib/modules)" ]; then
+    KERNEL_VER=$(ls -1 /lib/modules/ | sort -V | tail -1)
+    MODULE_COUNT=$(find /lib/modules/$KERNEL_VER -name "*.ko*" 2>/dev/null | wc -l)
+
+    if [ "$MODULE_COUNT" -gt 100 ]; then
+        success "✓ Kernel modules found: $MODULE_COUNT modules for version $KERNEL_VER"
+    else
+        warn "⚠ Found only $MODULE_COUNT modules (expected more)"
+    fi
+else
+    error "✗ No kernel modules found in /lib/modules"
+    KERNEL_VALID=false
+fi
+
+# Check 4: Boot partition is writable
+if touch /boot/.test 2>/dev/null; then
+    rm -f /boot/.test
+    success "✓ Boot partition is writable"
+else
+    error "✗ Boot partition is not writable"
+    KERNEL_VALID=false
+fi
+
+# Final result
+echo ""
+if [ "$KERNEL_VALID" = true ]; then
+    success "Kernel installation completed and validated successfully"
+    log "You can verify with: ls -lh /boot/"
+else
+    error "Kernel validation failed - some critical files are missing"
+    error "Boot may fail. Please review the errors above."
+    exit 1
 fi
