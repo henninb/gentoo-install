@@ -28,36 +28,27 @@ case "${KERNEL_METHOD}" in
         log "Installing binary kernel (gentoo-kernel-bin)"
         log "This is faster but less customizable"
 
-        # Install linux-firmware first (needed by kernel postinst)
-        if ! package_installed "sys-kernel/linux-firmware"; then
-            log "Installing linux-firmware (required for hardware support)..."
-            emerge -v sys-kernel/linux-firmware
-        fi
-
         # Install and configure installkernel with dracut USE flag
         log "Configuring installkernel with dracut support..."
         mkdir -p /etc/portage/package.use
         echo "sys-kernel/installkernel dracut" >> /etc/portage/package.use/kernel
 
-        if ! package_installed "sys-kernel/installkernel"; then
-            log "Installing installkernel..."
-            emerge -v sys-kernel/installkernel
-        fi
+        # Install linux-firmware first (needed by kernel postinst)
+        log "Installing linux-firmware (required for hardware support)..."
+        emerge -v --update --newuse sys-kernel/linux-firmware
+
+        # Install installkernel with dracut support
+        log "Installing installkernel..."
+        emerge -v --update --newuse sys-kernel/installkernel
 
         # Install dracut (required by installkernel)
-        if ! package_installed "sys-kernel/dracut"; then
-            log "Installing dracut (required for initramfs generation)..."
-            emerge -v sys-kernel/dracut
-        fi
+        log "Installing dracut (required for initramfs generation)..."
+        emerge -v --update --newuse sys-kernel/dracut
 
         # Now install the kernel
-        if package_installed "sys-kernel/gentoo-kernel-bin"; then
-            log "Binary kernel already installed"
-        else
-            log "Emerging gentoo-kernel-bin (this may take several minutes)..."
-            # Use autounmask to handle USE flag changes automatically
-            emerge -v --autounmask-write --autounmask-continue sys-kernel/gentoo-kernel-bin
-        fi
+        log "Emerging gentoo-kernel-bin (this may take several minutes)..."
+        # Use autounmask to handle USE flag changes automatically
+        emerge -v --update --newuse --autounmask-write --autounmask-continue sys-kernel/gentoo-kernel-bin
         ;;
 
     genkernel)
@@ -65,22 +56,16 @@ case "${KERNEL_METHOD}" in
         log "WARNING: This will take a long time (30-60 minutes)"
 
         # Install kernel sources
-        if ! package_installed "sys-kernel/gentoo-sources"; then
-            log "Installing gentoo-sources"
-            run_logged emerge --update --newuse sys-kernel/gentoo-sources
-        fi
+        log "Installing gentoo-sources"
+        emerge -v --update --newuse sys-kernel/gentoo-sources
 
         # Install genkernel
-        if ! package_installed "sys-kernel/genkernel"; then
-            log "Installing genkernel"
-            run_logged emerge --update --newuse sys-kernel/genkernel
-        fi
+        log "Installing genkernel"
+        emerge -v --update --newuse sys-kernel/genkernel
 
         # Install linux-firmware
-        if ! package_installed "sys-kernel/linux-firmware"; then
-            log "Installing linux-firmware"
-            run_logged emerge --update --newuse sys-kernel/linux-firmware
-        fi
+        log "Installing linux-firmware"
+        emerge -v --update --newuse sys-kernel/linux-firmware
 
         # Set kernel source
         run_logged eselect kernel list
@@ -104,9 +89,8 @@ case "${KERNEL_METHOD}" in
         warn "You will need to configure and build the kernel yourself"
         warn "Ensure sys-kernel/gentoo-sources is installed and configured"
 
-        if ! package_installed "sys-kernel/gentoo-sources"; then
-            run_logged emerge --update --newuse sys-kernel/gentoo-sources
-        fi
+        log "Installing gentoo-sources"
+        emerge -v --update --newuse sys-kernel/gentoo-sources
 
         error "Manual kernel build is not automated. Please build your kernel and re-run this phase."
         exit 1
