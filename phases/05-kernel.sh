@@ -28,6 +28,12 @@ case "${KERNEL_METHOD}" in
         log "Installing binary kernel (gentoo-kernel-bin)"
         log "This is faster but less customizable"
 
+        # Install dracut first (required by installkernel)
+        if ! package_installed "sys-kernel/dracut"; then
+            log "Installing dracut (required for initramfs generation)..."
+            emerge -v sys-kernel/dracut
+        fi
+
         if package_installed "sys-kernel/gentoo-kernel-bin"; then
             log "Binary kernel already installed"
         else

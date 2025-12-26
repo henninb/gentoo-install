@@ -286,6 +286,14 @@ main() {
             mount --rbind /dev "${MOUNT_ROOT}/dev" 2>/dev/null || log "dev already mounted"
             mount --rbind /sys "${MOUNT_ROOT}/sys" 2>/dev/null || log "sys already mounted"
 
+            # Ensure boot partition is mounted
+            if ! mountpoint -q "${MOUNT_ROOT}/boot/efi" 2>/dev/null; then
+                log "Mounting boot partition..."
+                DISK="${DISK:-/dev/vda}"
+                BOOT_PART="${DISK}1"
+                mount "${BOOT_PART}" "${MOUNT_ROOT}/boot/efi" 2>/dev/null || log "boot already mounted or not needed"
+            fi
+
             # Copy resolv.conf for network
             log "Copying network configuration..."
             cp -L /etc/resolv.conf "${MOUNT_ROOT}/etc/" 2>/dev/null
