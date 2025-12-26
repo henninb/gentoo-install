@@ -114,8 +114,18 @@ else
         log "From: ${DOWNLOAD_URL}"
         log "This may take several minutes depending on your connection..."
 
-        if curl -L --fail --progress-bar -o "${STAGE3_FILE}" "${DOWNLOAD_URL}"; then
-            DOWNLOAD_SUCCESS=true
+        # Try wget first (more reliable), fallback to curl
+        if command -v wget &>/dev/null; then
+            if wget --progress=bar:force -O "${STAGE3_FILE}" "${DOWNLOAD_URL}" 2>&1; then
+                DOWNLOAD_SUCCESS=true
+            fi
+        elif command -v curl &>/dev/null; then
+            if curl -L --fail --progress-bar -o "${STAGE3_FILE}" "${DOWNLOAD_URL}"; then
+                DOWNLOAD_SUCCESS=true
+            fi
+        else
+            error "Neither wget nor curl is available"
+            exit 1
         fi
     else
         # Try each mirror in sequence
@@ -138,14 +148,26 @@ else
             log "From: ${DOWNLOAD_URL}"
             log "This may take several minutes depending on your connection..."
 
-            if curl -L --fail --progress-bar -o "${STAGE3_FILE}" "${DOWNLOAD_URL}"; then
-                DOWNLOAD_SUCCESS=true
-                success "Downloaded from ${mirror}"
-                break
+            # Try wget first (more reliable), fallback to curl
+            if command -v wget &>/dev/null; then
+                if wget --progress=bar:force -O "${STAGE3_FILE}" "${DOWNLOAD_URL}" 2>&1; then
+                    DOWNLOAD_SUCCESS=true
+                    success "Downloaded from ${mirror}"
+                    break
+                fi
+            elif command -v curl &>/dev/null; then
+                if curl -L --fail --progress-bar -o "${STAGE3_FILE}" "${DOWNLOAD_URL}"; then
+                    DOWNLOAD_SUCCESS=true
+                    success "Downloaded from ${mirror}"
+                    break
+                fi
             else
-                warn "Download failed from ${mirror}, trying next mirror..."
-                rm -f "${STAGE3_FILE}"  # Clean up partial download
+                error "Neither wget nor curl is available"
+                exit 1
             fi
+
+            warn "Download failed from ${mirror}, trying next mirror..."
+            rm -f "${STAGE3_FILE}"  # Clean up partial download
         done
     fi
 
