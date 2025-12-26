@@ -26,17 +26,21 @@ fi
 
 # Configure locale
 log "Configuring locale: ${LOCALE}"
-if grep -q "^${LOCALE}" /etc/locale.gen; then
-    log "Locale already configured"
+if grep -q "^${LOCALE}" /etc/locale.gen 2>/dev/null; then
+    log "Locale already in locale.gen"
 else
     echo "${LOCALE} UTF-8" >> /etc/locale.gen
-    run_logged locale-gen
 fi
 
-# Set system locale
-if command_exists localectl; then
-    run_logged localectl set-locale LANG="${LOCALE}"
-fi
+# Generate locales
+run_logged locale-gen
+
+# Set system locale (write directly to locale.conf)
+log "Writing /etc/locale.conf"
+cat > /etc/locale.conf <<EOF
+LANG=${LOCALE}
+LC_COLLATE=C
+EOF
 
 # Configure timezone
 log "Setting timezone: ${TIMEZONE}"
@@ -65,10 +69,11 @@ if ! grep -q "${HOSTNAME}" /etc/hosts; then
 EOF
 fi
 
-# Set keymap
-if command_exists localectl; then
-    run_logged localectl set-keymap us
-fi
+# Set keymap (write directly to vconsole.conf)
+log "Configuring keymap"
+cat > /etc/vconsole.conf <<EOF
+KEYMAP=us
+EOF
 
 # Validate
 validate_locale
