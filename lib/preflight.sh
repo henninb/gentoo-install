@@ -11,6 +11,106 @@ if ! declare -f log >/dev/null 2>&1; then
     source "${SCRIPT_DIR}/common.sh"
 fi
 
+# Auto-install missing dependencies in live environment
+auto_install_dependencies() {
+    log "Checking for required tools..."
+
+    # Map of commands to packages for different distros
+    declare -A pkg_map_arch=(
+        ["parted"]="parted"
+        ["mkfs.fat"]="dosfstools"
+        ["mkfs.ext4"]="e2fsprogs"
+        ["curl"]="curl"
+        ["tar"]="tar"
+        ["sha256sum"]="coreutils"
+    )
+
+    # Detect package manager
+    local pkg_manager=""
+    local install_cmd=""
+
+    if command -v pacman >/dev/null 2>&1; then
+        pkg_manager="pacman"
+        install_cmd="pacman -Sy --noconfirm --needed"
+    elif command -v apt-get >/dev/null 2>&1; then
+        pkg_manager="apt-get"
+        install_cmd="apt-get update && apt-get install -y"
+    elif command -v dnf >/dev/null 2>&1; then
+        pkg_manager="dnf"
+        install_cmd="dnf install -y"
+    elif command -v zypper >/dev/null 2>&1; then
+        pkg_manager="zypper"
+        install_cmd="zypper install -y"
+    else
+        warn "Could not detect package manager for auto-install"
+        return 0
+    fi
+
+    log "Detected package manager: ${pkg_manager}"
+
+    # Check which packages are missing
+    local missing_pkgs=()
+
+    for cmd in parted mkfs.fat mkfs.ext4 curl tar sha256sum; do
+        if ! command -v "${cmd}" >/dev/null 2>&1; then
+            case "${pkg_manager}" in
+                pacman)
+                    local pkg="${pkg_map_arch[${cmd}]}"
+                    if [ -n "${pkg}" ]; then
+                        missing_pkgs+=("${pkg}")
+                    fi
+                    ;;
+                *)
+                    # For other package managers, package name usually matches command
+                    missing_pkgs+=("${cmd}")
+                    ;;
+            esac
+        fi
+    done
+
+    # Remove duplicates
+    local unique_pkgs=($(printf "%s\n" "${missing_pkgs[@]}" | sort -u))
+
+    if [ ${#unique_pkgs[@]} -eq 0 ]; then
+        log "All required tools are already installed"
+        return 0
+    fi
+
+    log "Missing packages: ${unique_pkgs[*]}"
+    log "Installing dependencies automatically..."
+
+    # Install missing packages
+    case "${pkg_manager}" in
+        pacman)
+            if pacman -Sy --noconfirm --needed "${unique_pkgs[@]}"; then
+                success "Dependencies installed successfully"
+                return 0
+            else
+                error "Failed to install dependencies"
+                return 1
+            fi
+            ;;
+        apt-get)
+            if apt-get update && apt-get install -y "${unique_pkgs[@]}"; then
+                success "Dependencies installed successfully"
+                return 0
+            else
+                error "Failed to install dependencies"
+                return 1
+            fi
+            ;;
+        *)
+            if eval "${install_cmd} ${unique_pkgs[*]}"; then
+                success "Dependencies installed successfully"
+                return 0
+            else
+                error "Failed to install dependencies"
+                return 1
+            fi
+            ;;
+    esac
+}
+
 # Check if running with sufficient privileges
 check_root() {
     if [ "$(id -u)" -ne 0 ]; then
@@ -226,6 +326,7 @@ run_preflight_checks() {
 
     local checks=(
         "check_root"
+        "auto_install_dependencies"
         "check_required_commands"
         "check_boot_mode"
         "check_network"
@@ -252,6 +353,6 @@ run_preflight_checks() {
     return 0
 }
 
-export -f check_root check_required_commands check_network check_disk_space
+export -f auto_install_dependencies check_root check_required_commands check_network check_disk_space
 export -f check_memory check_cpu_cores check_boot_mode check_existing_install
 export -f check_environment run_preflight_checks
