@@ -32,7 +32,13 @@ get_latest_stage3_url() {
 
     # Download the latest file index
     local latest_path
-    latest_path=$(curl -sL "${autobuilds}/${latest_file}" | grep -v '^#' | head -n1 | awk '{print $1}')
+    latest_path=$(curl -sL "${autobuilds}/${latest_file}" | \
+        grep -v '^#' | \
+        grep -v '^$' | \
+        grep -v '^-' | \
+        grep '\.tar\.' | \
+        head -n1 | \
+        awk '{print $1}')
 
     if [ -z "${latest_path}" ]; then
         error "Failed to determine latest stage3 path"
