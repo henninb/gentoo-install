@@ -247,11 +247,14 @@ main() {
             if ! phase_completed "01-partition"; then
                 prompt_configuration
 
-                # Run pre-flight checks with the configured disk
-                if ! run_preflight_checks "${DISK}"; then
-                    error "Pre-flight checks failed"
-                    error "Please resolve the issues above before continuing"
-                    exit 1
+                # Run pre-flight checks ONLY if NOT in chroot
+                # (partitioning tools are only needed in live ISO environment)
+                if ! in_chroot; then
+                    if ! run_preflight_checks "${DISK}"; then
+                        error "Pre-flight checks failed"
+                        error "Please resolve the issues above before continuing"
+                        exit 1
+                    fi
                 fi
             fi
             ;;
