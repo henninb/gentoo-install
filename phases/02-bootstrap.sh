@@ -17,7 +17,16 @@ DISK="${DISK:-/dev/sda}"
 BOOT_PART="${DISK}1"
 ROOT_PART="${DISK}2"
 MOUNT_ROOT="/mnt/gentoo"
-MIRROR_BASE="${MIRROR_BASE:-https://mirror.bytemark.co.uk/gentoo}"
+
+# US mirrors (try in order)
+US_MIRRORS=(
+    "https://gentoo.osuosl.org"
+    "https://mirrors.rit.edu/gentoo"
+    "https://mirror.leaseweb.com/gentoo"
+    "https://distfiles.gentoo.org"
+)
+
+MIRROR_BASE="${MIRROR_BASE:-${US_MIRRORS[0]}}"
 STAGE3_PROFILE="${STAGE3_PROFILE:-desktop-systemd}"  # Options: desktop-systemd, systemd, openrc, desktop-openrc
 STAGE3_PATTERN="stage3-amd64-${STAGE3_PROFILE}-*.tar.xz"
 
@@ -90,31 +99,61 @@ if ls ${STAGE3_PATTERN} 1>/dev/null 2>&1; then
 else
     log "Downloading latest stage3 tarball"
 
+    DOWNLOAD_SUCCESS=false
+
     # Get latest stage3 URL (use provided URL or auto-detect)
     if [ -n "${STAGE3_URL:-}" ]; then
         log "Using provided STAGE3_URL: ${STAGE3_URL}"
         DOWNLOAD_URL="${STAGE3_URL}"
-    else
-        log "Auto-detecting latest stage3 tarball"
-        DOWNLOAD_URL=$(get_latest_stage3_url "${MIRROR_BASE}" "${STAGE3_PROFILE}")
-        if [ $? -ne 0 ]; then
-            error "Failed to auto-detect stage3 URL"
-            error "Please set STAGE3_URL environment variable manually"
-            error "Example: export STAGE3_URL='https://mirror.bytemark.co.uk/gentoo/releases/amd64/autobuilds/20230115T170214Z/stage3-amd64-desktop-systemd-20230115T170214Z.tar.xz'"
-            exit 1
+
+        # Clean the URL (remove any whitespace or newlines)
+        DOWNLOAD_URL=$(echo "${DOWNLOAD_URL}" | tr -d '[:space:]')
+        STAGE3_FILE=$(basename "${DOWNLOAD_URL}")
+
+        log "Downloading: ${STAGE3_FILE}"
+        log "From: ${DOWNLOAD_URL}"
+        log "This may take several minutes depending on your connection..."
+
+        if curl -L --fail --progress-bar -o "${STAGE3_FILE}" "${DOWNLOAD_URL}"; then
+            DOWNLOAD_SUCCESS=true
         fi
+    else
+        # Try each mirror in sequence
+        log "Auto-detecting latest stage3 tarball from US mirrors"
+
+        for mirror in "${US_MIRRORS[@]}"; do
+            log "Trying mirror: ${mirror}"
+
+            DOWNLOAD_URL=$(get_latest_stage3_url "${mirror}" "${STAGE3_PROFILE}" 2>/dev/null)
+            if [ $? -ne 0 ] || [ -z "${DOWNLOAD_URL}" ]; then
+                warn "Failed to get stage3 URL from ${mirror}, trying next mirror..."
+                continue
+            fi
+
+            # Clean the URL (remove any whitespace or newlines)
+            DOWNLOAD_URL=$(echo "${DOWNLOAD_URL}" | tr -d '[:space:]')
+            STAGE3_FILE=$(basename "${DOWNLOAD_URL}")
+
+            log "Downloading: ${STAGE3_FILE}"
+            log "From: ${DOWNLOAD_URL}"
+            log "This may take several minutes depending on your connection..."
+
+            if curl -L --fail --progress-bar -o "${STAGE3_FILE}" "${DOWNLOAD_URL}"; then
+                DOWNLOAD_SUCCESS=true
+                success "Downloaded from ${mirror}"
+                break
+            else
+                warn "Download failed from ${mirror}, trying next mirror..."
+                rm -f "${STAGE3_FILE}"  # Clean up partial download
+            fi
+        done
     fi
 
-    STAGE3_FILE=$(basename "${DOWNLOAD_URL}")
-
-    log "Downloading: ${STAGE3_FILE}"
-    log "This may take several minutes depending on your connection..."
-
-    # Remove any existing partial download
-    rm -f "${STAGE3_FILE}.partial"
-
-    if ! retry 3 curl -L --progress-bar -o "${STAGE3_FILE}" "${DOWNLOAD_URL}"; then
-        error "Failed to download stage3 tarball"
+    if [ "${DOWNLOAD_SUCCESS}" != "true" ]; then
+        error "Failed to download stage3 tarball from all mirrors"
+        error "You can try manually downloading from:"
+        error "  https://www.gentoo.org/downloads/"
+        error "And placing the .tar.xz file in ${MOUNT_ROOT}/"
         exit 1
     fi
 
