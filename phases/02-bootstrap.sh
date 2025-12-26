@@ -110,7 +110,10 @@ else
     log "Downloading: ${STAGE3_FILE}"
     log "This may take several minutes depending on your connection..."
 
-    if ! retry 3 curl -L -C - "${DOWNLOAD_URL}" -o "${STAGE3_FILE}"; then
+    # Remove any existing partial download
+    rm -f "${STAGE3_FILE}.partial"
+
+    if ! retry 3 curl -L --progress-bar -o "${STAGE3_FILE}" "${DOWNLOAD_URL}"; then
         error "Failed to download stage3 tarball"
         exit 1
     fi
