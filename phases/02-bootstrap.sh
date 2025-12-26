@@ -37,9 +37,9 @@ get_latest_stage3_url() {
     local autobuilds="${mirror}/releases/amd64/autobuilds"
     local latest_file="latest-stage3-amd64-${profile}.txt"
 
-    log "Fetching latest stage3 information for profile: ${profile}"
+    # Download the latest file index (send logs to stderr to avoid polluting stdout)
+    echo "Fetching latest stage3 information for profile: ${profile}" >&2
 
-    # Download the latest file index
     local latest_path
     latest_path=$(curl -sL "${autobuilds}/${latest_file}" | \
         grep -v '^#' | \
@@ -50,13 +50,14 @@ get_latest_stage3_url() {
         awk '{print $1}')
 
     if [ -z "${latest_path}" ]; then
-        error "Failed to determine latest stage3 path"
+        echo "Failed to determine latest stage3 path" >&2
         return 1
     fi
 
     local full_url="${autobuilds}/${latest_path}"
-    log "Latest stage3 URL: ${full_url}"
-    echo "${full_url}"
+
+    # Only output the URL to stdout (no colors, no log messages)
+    printf "%s" "${full_url}"
 }
 
 require_root
@@ -147,12 +148,7 @@ else
 
             log "Downloading: ${STAGE3_FILE}"
             log "From: ${DOWNLOAD_URL}"
-            log "URL length: ${#DOWNLOAD_URL} characters"
             log "This may take several minutes depending on your connection..."
-
-            # Debug: print URL in hex to see any hidden characters
-            echo "DEBUG URL hex:" >&2
-            echo "${DOWNLOAD_URL}" | od -A x -t x1z -v | head -5 >&2
 
             # Try wget first (more reliable), fallback to curl
             if command -v wget &>/dev/null; then
