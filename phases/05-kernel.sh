@@ -28,24 +28,25 @@ case "${KERNEL_METHOD}" in
         log "Installing binary kernel (gentoo-kernel-bin)"
         log "This is faster but less customizable"
 
-        # Install dracut first (required by installkernel)
+        # Install linux-firmware first (needed by kernel postinst)
+        if ! package_installed "sys-kernel/linux-firmware"; then
+            log "Installing linux-firmware (required for hardware support)..."
+            emerge -v sys-kernel/linux-firmware
+        fi
+
+        # Install dracut (required by installkernel)
         if ! package_installed "sys-kernel/dracut"; then
             log "Installing dracut (required for initramfs generation)..."
             emerge -v sys-kernel/dracut
         fi
 
+        # Now install the kernel
         if package_installed "sys-kernel/gentoo-kernel-bin"; then
             log "Binary kernel already installed"
         else
             log "Emerging gentoo-kernel-bin (this may take several minutes)..."
             # Use autounmask to handle USE flag changes automatically
             emerge -v --autounmask-write --autounmask-continue sys-kernel/gentoo-kernel-bin
-        fi
-
-        # Also install linux-firmware
-        if ! package_installed "sys-kernel/linux-firmware"; then
-            log "Installing linux-firmware"
-            emerge -v sys-kernel/linux-firmware
         fi
         ;;
 
