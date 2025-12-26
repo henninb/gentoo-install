@@ -69,10 +69,18 @@ case "${KERNEL_METHOD}" in
                 log "Kernel already in /boot"
             fi
 
-            # Generate initramfs with dracut if not present
-            if [ ! -f "/boot/initramfs-${KERNEL_VER}.img" ] && [ ! -f "/boot/initramfs-${KERNEL_VER}-gentoo-dist.img" ]; then
-                log "Generating initramfs with dracut..."
-                dracut --kver "${KERNEL_VER}" "/boot/initramfs-${KERNEL_VER}.img" || warn "Dracut failed, but continuing..."
+            # Generate initramfs with dracut
+            log "Generating initramfs with dracut for kernel ${KERNEL_VER}..."
+
+            # Try different initramfs naming conventions
+            INITRAMFS_NAME="/boot/initramfs-${KERNEL_VER}-gentoo-dist.img"
+
+            if dracut --force --kver "${KERNEL_VER}" "${INITRAMFS_NAME}"; then
+                success "Initramfs generated: ${INITRAMFS_NAME}"
+            else
+                warn "Dracut failed, trying alternate method..."
+                # Fallback: try without explicit kernel version
+                dracut --force "${INITRAMFS_NAME}" || warn "Initramfs generation failed, system may not boot without it"
             fi
         else
             warn "Could not determine kernel version, skipping manual installation"
@@ -142,7 +150,8 @@ if ls /boot/vmlinuz-* 1>/dev/null 2>&1; then
     KERNEL_SIZE=$(stat -c%s "$KERNEL_FILE" 2>/dev/null || echo "0")
 
     if [ "$KERNEL_SIZE" -gt 1000000 ]; then  # Should be > 1MB
-        success "✓ Kernel image found: $KERNEL_FILE ($(numfmt --to=iec $KERNEL_SIZE))"
+        KERNEL_SIZE_MB=$((KERNEL_SIZE / 1024 / 1024))
+        success "✓ Kernel image found: $KERNEL_FILE (${KERNEL_SIZE_MB}MB)"
     else
         error "✗ Kernel image is too small or missing: $KERNEL_FILE"
         KERNEL_VALID=false
@@ -158,7 +167,8 @@ if ls /boot/initramfs-* 1>/dev/null 2>&1 || ls /boot/initrd-* 1>/dev/null 2>&1; 
     INITRD_SIZE=$(stat -c%s "$INITRD_FILE" 2>/dev/null || echo "0")
 
     if [ "$INITRD_SIZE" -gt 1000000 ]; then  # Should be > 1MB
-        success "✓ Initramfs found: $INITRD_FILE ($(numfmt --to=iec $INITRD_SIZE))"
+        INITRD_SIZE_MB=$((INITRD_SIZE / 1024 / 1024))
+        success "✓ Initramfs found: $INITRD_FILE (${INITRD_SIZE_MB}MB)"
     else
         warn "⚠ Initramfs exists but seems small: $INITRD_FILE"
     fi
